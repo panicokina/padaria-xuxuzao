@@ -66,7 +66,7 @@ export default function App() {
         .order('created_at', { ascending: false });
       if (!error && data) setOrders(data);
     } catch (err) {
-      console.log(err);
+      console.log('Erro ao buscar pedidos:', err);
     }
   }
 
@@ -77,11 +77,11 @@ export default function App() {
         .from('vendas_balcao')
         .select('quantidade');
       if (!error && data) {
-        const total = data.reduce((acc, curr) => acc + curr.quantidade, 0);
+        const total = data.reduce((acc, curr) => acc + (Number(curr.quantidade) || 0), 0);
         setBalcaoCount(total);
       }
     } catch (err) {
-      console.log(err);
+      console.log('Erro ao buscar vendas do balcão:', err);
     }
   }
 
@@ -127,7 +127,8 @@ export default function App() {
 
     if (supabase) {
       try {
-        await supabase.from('pedidos').insert([newOrder]);
+        const { error } = await supabase.from('pedidos').insert([newOrder]);
+        if (error) console.error('Erro Supabase Pedido:', error);
         fetchOrders();
       } catch (err) {
         console.log(err);
@@ -158,15 +159,23 @@ export default function App() {
       return alert('Não é possível ter uma quantidade negativa de pães no balcão!');
     }
 
+    // Atualiza imediatamente na tela para resposta instantânea
+    setBalcaoCount(prev => Math.max(0, prev + qty));
+
     if (supabase) {
       try {
-        await supabase.from('vendas_balcao').insert([{ quantidade: qty, valor_total: qty * 15.00 }]);
-        fetchBalcao();
+        const { error } = await supabase.from('vendas_balcao').insert([
+          { quantidade: qty, valor_total: qty * 15.00 }
+        ]);
+        if (error) {
+          console.error('Erro ao salvar venda do balcão no Supabase:', error);
+          alert('Aviso: A alteração foi feita na tela, mas houve um erro ao salvar no banco Supabase: ' + error.message);
+        } else {
+          fetchBalcao();
+        }
       } catch (err) {
-        console.log(err);
+        console.error('Erro de rede/Supabase:', err);
       }
-    } else {
-      setBalcaoCount(prev => Math.max(0, prev + qty));
     }
   };
 
@@ -180,7 +189,7 @@ export default function App() {
       try {
         const { error } = await supabase.from('pedidos').delete().eq('id', orderToDelete.id);
         if (error) {
-          alert('Erro ao excluir pedido no banco de dados.');
+          alert('Erro ao excluir pedido no banco de dados: ' + error.message);
           console.log(error);
         } else {
           fetchOrders();
