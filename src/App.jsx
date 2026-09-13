@@ -536,7 +536,7 @@ export default function App() {
                 </p>
               </div>
 
-              {/* QR CODE LOCAL EM PNG (pix.png) - Mantém 100% das bordas originais */}
+              {/* QR CODE LOCAL ESTICADO PREENCHENDO O QUADRADO */}
               <div style={{ 
                 marginBottom: '1.25rem', 
                 display: 'inline-block', 
@@ -549,7 +549,7 @@ export default function App() {
                 <img
                   src="./pix.png"
                   alt="QR Code Pix"
-                  style={{ width: '200px', height: '200px', display: 'block', margin: '0 auto', objectFit: 'contain' }}
+                  style={{ width: '200px', height: '200px', display: 'block', margin: '0 auto', objectFit: 'fill' }}
                 />
               </div>
 
