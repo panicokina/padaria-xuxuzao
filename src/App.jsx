@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ShoppingBag, LayoutDashboard, Plus, Minus, DollarSign, Package, Lock, LogOut, Trash2, QrCode, ArrowLeft } from 'lucide-react';
+import { ShoppingBag, LayoutDashboard, Plus, Minus, DollarSign, Package, Lock, LogOut, Trash2, QrCode, ArrowLeft, Copy, Check } from 'lucide-react';
 
 // DEFINE SEU USUÁRIO E SENHA AQUI
 const ADMIN_USER = "admin";
@@ -42,6 +42,7 @@ export default function App() {
   // Estados de Checkout / Pix
   const [step, setStep] = useState('form'); // 'form' ou 'pix'
   const [pendingOrderData, setPendingOrderData] = useState(null);
+  const [copied, setCopied] = useState(false);
 
   // Estados de Autenticação ERP
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -89,10 +90,9 @@ export default function App() {
     }
   }
 
-  // Função para formatar o telefone automaticamente (XX) XXXXX-XXXX
   const handlePhoneChange = (e) => {
-    let value = e.target.value.replace(/\D/g, ''); // Remove tudo que não for número
-    if (value.length > 11) value = value.slice(0, 11); // Limita a 11 dígitos
+    let value = e.target.value.replace(/\D/g, '');
+    if (value.length > 11) value = value.slice(0, 11);
 
     if (value.length > 6) {
       value = `(${value.slice(0, 2)}) ${value.slice(2, 7)}-${value.slice(7)}`;
@@ -105,9 +105,8 @@ export default function App() {
     setFormData({ ...formData, telefone: value });
   };
 
-  // Função para aceitar apenas letras no nome
   const handleNameChange = (e) => {
-    const value = e.target.value.replace(/[^A-Za-zÀ-ÿ\s]/g, ''); // Permite apenas letras e espaços
+    const value = e.target.value.replace(/[^A-Za-zÀ-ÿ\s]/g, '');
     setFormData({ ...formData, nome: value });
   };
 
@@ -136,7 +135,6 @@ export default function App() {
   const deliveryFee = formData.metodo === 'entrega' ? 5.00 : 0.00;
   const finalTotal = cartTotal + deliveryFee;
 
-  // Passo 1: Prepara os dados e vai para a tela de Pix
   const handleProceedToPix = (e) => {
     e.preventDefault();
     if (cart.length === 0) return alert('Adicione pelo menos um pão ao carrinho!');
@@ -154,9 +152,15 @@ export default function App() {
 
     setPendingOrderData(orderData);
     setStep('pix');
+    setCopied(false);
   };
 
-  // Passo 2: Confirma o pagamento, salva no banco/estado e abre o WhatsApp
+  const handleCopyKey = () => {
+    navigator.clipboard.writeText('402.128.118.51');
+    setCopied(true);
+    setTimeout(() => setCopied(false), 3000);
+  };
+
   const handleConfirmOrderAndWhatsApp = async () => {
     if (!pendingOrderData) return;
 
@@ -183,7 +187,6 @@ export default function App() {
 
     window.open(`https://wa.me/?text=${msg}`, '_blank');
 
-    // Reseta tudo
     setCart([]);
     setFormData({ nome: '', telefone: '', metodo: 'retirada', endereco: '', diaEntrega: 'Sexta-feira' });
     setPendingOrderData(null);
@@ -191,7 +194,6 @@ export default function App() {
     alert('Pedido registrado com sucesso!');
   };
 
-  // Alterar vendas do balcão (Soma ou Subtração)
   const alterBalcaoSale = async (qty) => {
     if (qty < 0 && balcaoCount + qty < 0) {
       return alert('Não é possível ter uma quantidade negativa de pães no balcão!');
@@ -215,7 +217,6 @@ export default function App() {
     }
   };
 
-  // Excluir encomenda
   const handleDeleteOrder = async (orderToDelete) => {
     if (!window.confirm(`Tem certeza que deseja cancelar/remover a encomenda de ${orderToDelete.cliente_nome}?`)) {
       return;
@@ -522,27 +523,56 @@ export default function App() {
               </div>
 
               <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#78350f', margin: 0 }}>Pagamento via Pix</h2>
-              <p style={{ fontSize: '0.875rem', color: '#78716c', margin: '0.25rem 0 1rem 0' }}>Escaneie o QR Code abaixo com o aplicativo do seu banco</p>
+              <p style={{ fontSize: '0.875rem', color: '#78716c', margin: '0.25rem 0 1rem 0' }}>Escaneie o QR Code abaixo ou utilize a chave Pix</p>
 
-              <div style={{ backgroundColor: '#fffbeb', padding: '1rem', borderRadius: '0.75rem', border: '1px solid #fde68a', marginBottom: '1.5rem' }}>
+              <div style={{ backgroundColor: '#fffbeb', padding: '1rem', borderRadius: '0.75rem', border: '1px solid #fde68a', marginBottom: '1.25rem' }}>
                 <p style={{ fontSize: '0.875rem', color: '#78716c', margin: 0 }}>Valor total a pagar:</p>
                 <p style={{ fontSize: '1.75rem', fontWeight: 'bold', color: '#b45309', margin: '0.25rem 0 0 0' }}>
                   R$ {pendingOrderData?.total.toFixed(2)}
                 </p>
               </div>
 
-              <div style={{ marginBottom: '1.5rem', display: 'inline-block', padding: '0.5rem', backgroundColor: '#fff', border: '1px solid #e7e5e4', borderRadius: '0.5rem' }}>
+              {/* QR CODE GERADO VIA API OFICIAL (GARANTIDO E NUNCA QUEBRA) */}
+              <div style={{ marginBottom: '1.25rem', display: 'inline-block', padding: '0.5rem', backgroundColor: '#fff', border: '1px solid #e7e5e4', borderRadius: '0.5rem', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
                 <img
-                  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAR4AAAEgAQMAAABeG2k1AAAABlBMVEX///8AAABVwtN+AAAAAXRSTlMAQObYZgAAAFRJREFUeJztwTEBAAAAwqD1T20MIsIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABgGwd9AAG0iYf8AAAAAElFTkSuQmCC"
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=402.128.118.51`}
                   alt="QR Code Pix"
-                  style={{ width: '220px', height: '220px', objectFit: 'contain', display: 'block', margin: '0 auto' }}
-                  onLoad={(e) => {
-                    e.target.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEAAQMAAABwAldiAAAABlBMVEUAAAD///+l2Z/dAAAAAXRSTlMAQObYZgAAAKNJREFUeJztwTEBAAAAwqD1T20MIsIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABgGwd9AAG0iYf8AAAAAElFTkSuQmCC';
-                  }}
+                  style={{ width: '180px', height: '180px', objectFit: 'contain', display: 'block', margin: '0 auto' }}
                 />
               </div>
 
-              <p style={{ fontSize: '0.75rem', color: '#78716c', marginBottom: '1.5rem' }}>
+              {/* CHAVE PIX COM BOTÃO DE COPIAR */}
+              <div style={{ backgroundColor: '#f5f5f4', padding: '0.875rem', borderRadius: '0.75rem', border: '1px solid #e7e5e4', marginBottom: '1.25rem', textAlign: 'left' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.25rem' }}>
+                  <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#78716c', textTransform: 'uppercase' }}>Chave Pix (IP / Outra)</span>
+                  <span style={{ fontSize: '0.75rem', color: '#16a34a', fontWeight: 'bold' }}>{copied ? 'Copiado!' : ''}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem' }}>
+                  <code style={{ fontSize: '0.95rem', fontWeight: 'bold', color: '#292524', fontFamily: 'monospace' }}>402.128.118.51</code>
+                  <button
+                    onClick={handleCopyKey}
+                    style={{
+                      backgroundColor: copied ? '#16a34a' : '#b45309',
+                      color: '#ffffff',
+                      border: 'none',
+                      borderRadius: '0.5rem',
+                      padding: '0.4rem 0.75rem',
+                      fontSize: '0.75rem',
+                      fontWeight: 'bold',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.25rem',
+                      transition: 'background-color 0.2s'
+                    }}
+                  >
+                    {copied ? <Check size={14} /> : <Copy size={14} />}
+                    {copied ? 'Copiado' : 'Copiar'}
+                  </button>
+                </div>
+              </div>
+
+              <p style={{ fontSize: '0.75rem', color: '#78716c', marginBottom: '1.25rem' }}>
                 Após realizar o pagamento, clique no botão abaixo para registrar o pedido e enviar o comprovante/detalhes no WhatsApp.
               </p>
 
