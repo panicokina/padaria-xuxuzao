@@ -5,7 +5,7 @@ import { ShoppingBag, LayoutDashboard, Plus, Minus, DollarSign, Package, Lock, L
 const ADMIN_USER = "admin";
 const ADMIN_PASS = "123456";
 
-// Sua Chave Pix (CPF limpo para uso em APIs e Copia e Cola)
+// Sua Chave Pix (CPF)
 const PIX_KEY_CLEAN = "40212811851";
 const PIX_KEY_FORMATTED = "402.128.118.51";
 
@@ -536,12 +536,12 @@ export default function App() {
                 </p>
               </div>
 
-              {/* QR CODE DE VOLTA NA TELA */}
-              <div style={{ marginBottom: '1.25rem', display: 'inline-block', padding: '0.5rem', backgroundColor: '#fff', border: '1px solid #e7e5e4', borderRadius: '0.5rem', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
+              {/* QR CODE MAIOR, NÍDITO E COM BORDA DE SEGURANÇA PARA O BANCO LER */}
+              <div style={{ marginBottom: '1.25rem', display: 'inline-block', padding: '1rem', backgroundColor: '#ffffff', border: '2px solid #fde68a', borderRadius: '0.75rem', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
                 <img
-                  src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${PIX_KEY_CLEAN}`}
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(PIX_KEY_CLEAN)}`}
                   alt="QR Code Pix"
-                  style={{ width: '180px', height: '180px', objectFit: 'contain', display: 'block', margin: '0 auto' }}
+                  style={{ width: '240px', height: '240px', objectFit: 'contain', display: 'block', margin: '0 auto' }}
                 />
               </div>
 
