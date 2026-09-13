@@ -536,7 +536,7 @@ export default function App() {
                 </p>
               </div>
 
-              {/* QR CODE SEGURO EM PNG CORRIGIDO */}
+              {/* QR CODE LOCAL EM PNG (pix.png) - Mantém 100% das bordas originais */}
               <div style={{ 
                 marginBottom: '1.25rem', 
                 display: 'inline-block', 
@@ -547,9 +547,9 @@ export default function App() {
                 boxShadow: '0 4px 6px rgba(0,0,0,0.05)'
               }}>
                 <img
-                  src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(PIX_KEY_CLEAN)}`}
+                  src="./pix.png"
                   alt="QR Code Pix"
-                  style={{ width: '200px', height: '200px', display: 'block', margin: '0 auto' }}
+                  style={{ width: '200px', height: '200px', display: 'block', margin: '0 auto', objectFit: 'contain' }}
                 />
               </div>
 
