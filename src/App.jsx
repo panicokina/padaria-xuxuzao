@@ -536,22 +536,21 @@ export default function App() {
                 </p>
               </div>
 
-              {/* QR CODE PERFEITAMENTE AJUSTADO E PROPORCIONAL */}
+              {/* QR CODE COM BORDA REMOVIDA E AJUSTE LIMPO */}
               <div style={{ 
                 marginBottom: '1.25rem', 
                 display: 'inline-flex', 
                 justifyContent: 'center',
                 alignItems: 'center',
-                padding: '12px', 
+                padding: '8px', 
                 backgroundColor: '#ffffff', 
-                border: '2px solid #fde68a', 
-                borderRadius: '0.75rem', 
-                boxShadow: '0 4px 6px rgba(0,0,0,0.05)'
+                borderRadius: '0.5rem', 
+                boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
               }}>
                 <img
                   src="./pix.png"
                   alt="QR Code Pix"
-                  style={{ width: '190px', height: '190px', display: 'block', objectFit: 'cover' }}
+                  style={{ width: '160px', height: '160px', display: 'block', objectFit: 'contain' }}
                 />
               </div>
 
