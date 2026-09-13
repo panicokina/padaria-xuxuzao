@@ -527,7 +527,7 @@ export default function App() {
               </div>
 
               <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#78350f', margin: 0 }}>Pagamento via Pix</h2>
-              <p style={{ fontSize: '0.875rem', color: '#78716c', margin: '0.25rem 0 1rem 0' }}>Utilize a chave Pix CPF abaixo ou copie para pagar no app do banco</p>
+              <p style={{ fontSize: '0.875rem', color: '#78716c', margin: '0.25rem 0 1rem 0' }}>Escaneie o QR Code abaixo ou utilize a chave Pix CPF</p>
 
               <div style={{ backgroundColor: '#fffbeb', padding: '1rem', borderRadius: '0.75rem', border: '1px solid #fde68a', marginBottom: '1.25rem' }}>
                 <p style={{ fontSize: '0.875rem', color: '#78716c', margin: 0 }}>Valor total a pagar:</p>
@@ -536,14 +536,23 @@ export default function App() {
                 </p>
               </div>
 
-              {/* CHAVE PIX COM BOTÃO DE COPIAR EM DESTAQUE */}
-              <div style={{ backgroundColor: '#f5f5f4', padding: '1rem', borderRadius: '0.75rem', border: '2px solid #b45309', marginBottom: '1.25rem', textAlign: 'left' }}>
+              {/* QR CODE DE VOLTA NA TELA */}
+              <div style={{ marginBottom: '1.25rem', display: 'inline-block', padding: '0.5rem', backgroundColor: '#fff', border: '1px solid #e7e5e4', borderRadius: '0.5rem', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
+                <img
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${PIX_KEY_CLEAN}`}
+                  alt="QR Code Pix"
+                  style={{ width: '180px', height: '180px', objectFit: 'contain', display: 'block', margin: '0 auto' }}
+                />
+              </div>
+
+              {/* CHAVE PIX COM BOTÃO DE COPIAR */}
+              <div style={{ backgroundColor: '#f5f5f4', padding: '0.875rem', borderRadius: '0.75rem', border: '1px solid #e7e5e4', marginBottom: '1.25rem', textAlign: 'left' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.25rem' }}>
                   <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#78716c', textTransform: 'uppercase' }}>Chave Pix (CPF)</span>
-                  <span style={{ fontSize: '0.75rem', color: '#16a34a', fontWeight: 'bold' }}>{copied ? 'Copiado com sucesso!' : ''}</span>
+                  <span style={{ fontSize: '0.75rem', color: '#16a34a', fontWeight: 'bold' }}>{copied ? 'Copiado!' : ''}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem' }}>
-                  <code style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#292524', fontFamily: 'monospace' }}>{PIX_KEY_FORMATTED}</code>
+                  <code style={{ fontSize: '0.95rem', fontWeight: 'bold', color: '#292524', fontFamily: 'monospace' }}>{PIX_KEY_FORMATTED}</code>
                   <button
                     onClick={handleCopyKey}
                     style={{
@@ -551,8 +560,8 @@ export default function App() {
                       color: '#ffffff',
                       border: 'none',
                       borderRadius: '0.5rem',
-                      padding: '0.5rem 1rem',
-                      fontSize: '0.875rem',
+                      padding: '0.4rem 0.75rem',
+                      fontSize: '0.75rem',
                       fontWeight: 'bold',
                       cursor: 'pointer',
                       display: 'flex',
@@ -561,14 +570,10 @@ export default function App() {
                       transition: 'background-color 0.2s'
                     }}
                   >
-                    {copied ? <Check size={16} /> : <Copy size={16} />}
-                    {copied ? 'Copiado' : 'Copiar Chave'}
+                    {copied ? <Check size={14} /> : <Copy size={14} />}
+                    {copied ? 'Copiado' : 'Copiar'}
                   </button>
                 </div>
-              </div>
-
-              <div style={{ backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0', padding: '0.875rem', borderRadius: '0.75rem', marginBottom: '1.25rem', fontSize: '0.8rem', color: '#166534', textAlign: 'left', lineHeight: '1.4' }}>
-                💡 <strong>Dica de Pagamento:</strong> No seu aplicativo do banco, escolha a opção <strong>Pix com Chave CPF</strong>, cole os números acima e digite o valor exato do pedido. É rápido e seguro!
               </div>
 
               <p style={{ fontSize: '0.75rem', color: '#78716c', marginBottom: '1.25rem' }}>
@@ -713,7 +718,7 @@ export default function App() {
 
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
                   <button onClick={() => alterBalcaoSale(-1)} style={{ flex: 1, padding: '0.4rem', borderRadius: '0.5rem', border: '1px solid #b45309', backgroundColor: '#92400e', color: '#fef3c7', fontWeight: 'bold', cursor: 'pointer' }}>-1 Pão</button>
-                  <button onClick={() => alterBalcaoSale(-2)} style={{ flex: 1, padding: '0.4rem', borderRadius: '0.5rem', border: '1px solid #b45309', backgroundColor: '#92400e', color: '#fef3c7', fontWeight: 'bold', cursor: 'pointer' }}>-2 Pães2</button>
+                  <button onClick={() => alterBalcaoSale(-2)} style={{ flex: 1, padding: '0.4rem', borderRadius: '0.5rem', border: '1px solid #b45309', backgroundColor: '#92400e', color: '#fef3c7', fontWeight: 'bold', cursor: 'pointer' }}>-2 Pães</button>
                   <button onClick={() => alterBalcaoSale(-5)} style={{ flex: 1, padding: '0.4rem', borderRadius: '0.5rem', border: '1px solid #b45309', backgroundColor: '#92400e', color: '#fef3c7', fontWeight: 'bold', cursor: 'pointer' }}>-5 Pães</button>
                 </div>
               </div>
