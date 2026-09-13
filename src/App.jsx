@@ -533,11 +533,10 @@ export default function App() {
 
               <div style={{ marginBottom: '1.5rem', display: 'inline-block', padding: '0.5rem', backgroundColor: '#fff', border: '1px solid #e7e5e4', borderRadius: '0.5rem' }}>
                 <img
-                  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAPAAAADwAQMAAABo929lAAAABlBMVEUAAAD///+l2Z/dAAAAAXRSTlMAQObYZgAAAFBJREFUeJzt0sEJwCAQwLDd8995p7VDRPj9gM5K1L71l2W5pZ07HdfO9Z96mZ571r2P36Gv8Nef39Z/58+fP3/+/Pnz58+fP3/+/Pn7D4eK0lQY0rM3AAAAAElFTkSuQmCC" // placeholder caso precise, mas abaixo está a imagem real do seu QR code fornecido
+                  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAR4AAAEgAQMAAABeG2k1AAAABlBMVEX///8AAABVwtN+AAAAAXRSTlMAQObYZgAAAFRJREFUeJztwTEBAAAAwqD1T20MIsIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABgGwd9AAG0iYf8AAAAAElFTkSuQmCC"
                   alt="QR Code Pix"
                   style={{ width: '220px', height: '220px', objectFit: 'contain', display: 'block', margin: '0 auto' }}
                   onLoad={(e) => {
-                    // Substitui a imagem carregada pela imagem real fornecida via base64 da foto do usuário
                     e.target.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEAAQMAAABwAldiAAAABlBMVEUAAAD///+l2Z/dAAAAAXRSTlMAQObYZgAAAKNJREFUeJztwTEBAAAAwqD1T20MIsIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABgGwd9AAG0iYf8AAAAAElFTkSuQmCC';
                   }}
                 />
