@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { ShoppingBag, LayoutDashboard, Plus, Minus, DollarSign, Package } from 'lucide-react';
+import { ShoppingBag, LayoutDashboard, Plus, Minus, DollarSign, Package, Lock, LogOut } from 'lucide-react';
+
+// DEFINE SEU USUÁRIO E SENHA AQUI
+const ADMIN_USER = "panicao";
+const ADMIN_PASS = "panicao";
 
 // Tente importar o supabase com segurança
 let supabase = null;
@@ -34,6 +38,11 @@ export default function App() {
   const [cart, setCart] = useState([]);
   const [orders, setOrders] = useState([]);
   const [balcaoCount, setBalcaoCount] = useState(0);
+
+  // Estados de Autenticação ERP
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [loginForm, setLoginForm] = useState({ usuario: '', senha: '' });
+  const [loginError, setLoginError] = useState('');
 
   const [formData, setFormData] = useState({
     nome: '',
@@ -153,6 +162,22 @@ export default function App() {
       }
     }
     setBalcaoCount(prev => prev + qty);
+  };
+
+  const handleLoginSubmit = (e) => {
+    e.preventDefault();
+    if (loginForm.usuario === ADMIN_USER && loginForm.senha === ADMIN_PASS) {
+      setIsLoggedIn(true);
+      setLoginError('');
+      setLoginForm({ usuario: '', senha: '' });
+    } else {
+      setLoginError('Usuário ou senha incorretos.');
+    }
+  };
+
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+    setActiveTab('cliente');
   };
 
   const faturamentoEncomendas = orders.reduce((acc, item) => acc + Number(item.total || 0), 0);
@@ -400,55 +425,141 @@ export default function App() {
         </main>
       )}
 
-      {/* PAINEL ADMIN / CONTABILIDADE */}
+      {/* PAINEL ADMIN / CONTABILIDADE OU TELA DE LOGIN */}
       {activeTab === 'admin' && (
-        <main style={{ maxWidth: '1000px', margin: '0 auto', padding: '2rem 1rem', display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem' }}>
-            <div style={{ backgroundColor: '#ffffff', padding: '1.25rem', borderRadius: '1rem', border: '1px solid #fde68a' }}>
-              <p style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#78716c', margin: 0, textTransform: 'uppercase' }}>Faturamento Total</p>
-              <p style={{ fontSize: '1.75rem', fontWeight: 'bold', color: '#78350f', margin: '0.25rem 0' }}>R$ {faturamentoTotal.toFixed(2)}</p>
-              <p style={{ fontSize: '0.75rem', color: '#16a34a', margin: 0, fontWeight: 'bold' }}>Lucro Limpo: ~R$ {(faturamentoTotal * 0.65).toFixed(2)}</p>
+        !isLoggedIn ? (
+          /* TELA DE LOGIN */
+          <main style={{ maxWidth: '400px', margin: '4rem auto', padding: '0 1rem' }}>
+            <div style={{ backgroundColor: '#ffffff', padding: '2rem', borderRadius: '1rem', border: '1px solid #fde68a', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
+              <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+                <div style={{ backgroundColor: '#fef3c7', width: '48px', height: '48px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 0.75rem auto' }}>
+                  <Lock size={24} color="#92400e" />
+                </div>
+                <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#78350f', margin: 0 }}>Acesso Restrito</h2>
+                <p style={{ fontSize: '0.875rem', color: '#78716c', margin: '0.25rem 0 0 0' }}>Digite suas credenciais do Painel ERP</p>
+              </div>
+
+              {loginError && (
+                <div style={{ backgroundColor: '#fef2f2', color: '#dc2626', border: '1px solid #fecaca', padding: '0.5rem', borderRadius: '0.5rem', fontSize: '0.875rem', marginBottom: '1rem', textAlign: 'center' }}>
+                  {loginError}
+                </div>
+              )}
+
+              <form onSubmit={handleLoginSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div>
+                  <label style={{ fontSize: '0.75rem', fontWeight: 'bold', display: 'block', marginBottom: '0.25rem' }}>Usuário</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Usuário"
+                    value={loginForm.usuario}
+                    onChange={e => setLoginForm({ ...loginForm, usuario: e.target.value })}
+                    style={{ width: '100%', padding: '0.6rem', borderRadius: '0.5rem', border: '1px solid #d6d3d1', boxSizing: 'border-box' }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ fontSize: '0.75rem', fontWeight: 'bold', display: 'block', marginBottom: '0.25rem' }}>Senha</label>
+                  <input
+                    type="password"
+                    required
+                    placeholder="••••••••"
+                    value={loginForm.senha}
+                    onChange={e => setLoginForm({ ...loginForm, senha: e.target.value })}
+                    style={{ width: '100%', padding: '0.6rem', borderRadius: '0.5rem', border: '1px solid #d6d3d1', boxSizing: 'border-box' }}
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  style={{
+                    backgroundColor: '#92400e',
+                    color: '#ffffff',
+                    fontWeight: 'bold',
+                    padding: '0.75rem',
+                    borderRadius: '0.5rem',
+                    border: 'none',
+                    cursor: 'pointer',
+                    marginTop: '0.5rem'
+                  }}
+                >
+                  Entrar no ERP
+                </button>
+              </form>
+            </div>
+          </main>
+        ) : (
+          /* PAINEL ERP AUTENTICADO */
+          <main style={{ maxWidth: '1000px', margin: '0 auto', padding: '2rem 1rem', display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#78350f', margin: 0 }}>Painel Administrativo</h2>
+              <button
+                onClick={handleLogout}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.25rem',
+                  backgroundColor: '#fee2e2',
+                  color: '#dc2626',
+                  border: 'none',
+                  padding: '0.4rem 0.75rem',
+                  borderRadius: '0.5rem',
+                  cursor: 'pointer',
+                  fontWeight: 'bold',
+                  fontSize: '0.875rem'
+                }}
+              >
+                <LogOut size={16} /> Sair
+              </button>
             </div>
 
-            <div style={{ backgroundColor: '#ffffff', padding: '1.25rem', borderRadius: '1rem', border: '1px solid #fde68a' }}>
-              <p style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#78716c', margin: 0, textTransform: 'uppercase' }}>Pães Vendidos</p>
-              <p style={{ fontSize: '1.75rem', fontWeight: 'bold', color: '#78350f', margin: '0.25rem 0' }}>{totalPaesVendidos} unidades</p>
-              <p style={{ fontSize: '0.75rem', color: '#78716c', margin: 0 }}>{orders.length} encomendas + {balcaoCount} balcão</p>
-            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem' }}>
+              <div style={{ backgroundColor: '#ffffff', padding: '1.25rem', borderRadius: '1rem', border: '1px solid #fde68a' }}>
+                <p style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#78716c', margin: 0, textTransform: 'uppercase' }}>Faturamento Total</p>
+                <p style={{ fontSize: '1.75rem', fontWeight: 'bold', color: '#78350f', margin: '0.25rem 0' }}>R$ {faturamentoTotal.toFixed(2)}</p>
+                <p style={{ fontSize: '0.75rem', color: '#16a34a', margin: 0, fontWeight: 'bold' }}>Lucro Limpo: ~R$ {(faturamentoTotal * 0.65).toFixed(2)}</p>
+              </div>
 
-            <div style={{ backgroundColor: '#78350f', color: '#ffffff', padding: '1.25rem', borderRadius: '1rem' }}>
-              <p style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#fef3c7', margin: 0, textTransform: 'uppercase' }}>Venda Rápida de Balcão</p>
-              <p style={{ fontSize: '0.75rem', color: '#fef3c7', margin: '0.25rem 0 0.75rem 0' }}>Clique para somar pães avulsos (R$ 15,00 un):</p>
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <button onClick={() => addBalcaoSale(1)} style={{ flex: 1, padding: '0.5rem', borderRadius: '0.5rem', border: 'none', backgroundColor: '#d97706', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }}>+1 Pão</button>
-                <button onClick={() => addBalcaoSale(2)} style={{ flex: 1, padding: '0.5rem', borderRadius: '0.5rem', border: 'none', backgroundColor: '#d97706', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }}>+2 Pães</button>
-                <button onClick={() => addBalcaoSale(5)} style={{ flex: 1, padding: '0.5rem', borderRadius: '0.5rem', border: 'none', backgroundColor: '#d97706', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }}>+5 Pães</button>
+              <div style={{ backgroundColor: '#ffffff', padding: '1.25rem', borderRadius: '1rem', border: '1px solid #fde68a' }}>
+                <p style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#78716c', margin: 0, textTransform: 'uppercase' }}>Pães Vendidos</p>
+                <p style={{ fontSize: '1.75rem', fontWeight: 'bold', color: '#78350f', margin: '0.25rem 0' }}>{totalPaesVendidos} unidades</p>
+                <p style={{ fontSize: '0.75rem', color: '#78716c', margin: 0 }}>{orders.length} encomendas + {balcaoCount} balcão</p>
+              </div>
+
+              <div style={{ backgroundColor: '#78350f', color: '#ffffff', padding: '1.25rem', borderRadius: '1rem' }}>
+                <p style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#fef3c7', margin: 0, textTransform: 'uppercase' }}>Venda Rápida de Balcão</p>
+                <p style={{ fontSize: '0.75rem', color: '#fef3c7', margin: '0.25rem 0 0.75rem 0' }}>Clique para somar pães avulsos (R$ 15,00 un):</p>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <button onClick={() => addBalcaoSale(1)} style={{ flex: 1, padding: '0.5rem', borderRadius: '0.5rem', border: 'none', backgroundColor: '#d97706', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }}>+1 Pão</button>
+                  <button onClick={() => addBalcaoSale(2)} style={{ flex: 1, padding: '0.5rem', borderRadius: '0.5rem', border: 'none', backgroundColor: '#d97706', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }}>+2 Pães</button>
+                  <button onClick={() => addBalcaoSale(5)} style={{ flex: 1, padding: '0.5rem', borderRadius: '0.5rem', border: 'none', backgroundColor: '#d97706', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }}>+5 Pães</button>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div style={{ backgroundColor: '#ffffff', padding: '1.5rem', borderRadius: '1rem', border: '1px solid #fde68a' }}>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#78350f', margin: '0 0 1rem 0' }}>Lista de Encomendas</h3>
-            {orders.length === 0 ? (
-              <p style={{ color: '#a8a29e', fontSize: '0.875rem', textAlign: 'center' }}>Nenhuma encomenda registrada ainda.</p>
-            ) : (
-              <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                {orders.map((o, idx) => (
-                  <li key={idx} style={{ padding: '0.75rem', backgroundColor: '#fffbeb', borderRadius: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div>
-                      <strong>{o.cliente_nome}</strong> ({o.cliente_telefone}) - {o.dia_fornada}
-                      <br />
-                      <small style={{ color: '#78716c' }}>{o.metodo_entrega === 'entrega' ? `Entrega: ${o.endereco}` : 'Retirada'}</small>
-                    </div>
-                    <div style={{ fontWeight: 'bold', color: '#b45309' }}>
-                      R$ {Number(o.total || 0).toFixed(2)}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </main>
+            <div style={{ backgroundColor: '#ffffff', padding: '1.5rem', borderRadius: '1rem', border: '1px solid #fde68a' }}>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#78350f', margin: '0 0 1rem 0' }}>Lista de Encomendas</h3>
+              {orders.length === 0 ? (
+                <p style={{ color: '#a8a29e', fontSize: '0.875rem', textAlign: 'center' }}>Nenhuma encomenda registrada ainda.</p>
+              ) : (
+                <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  {orders.map((o, idx) => (
+                    <li key={idx} style={{ padding: '0.75rem', backgroundColor: '#fffbeb', borderRadius: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>
+                        <strong>{o.cliente_nome}</strong> ({o.cliente_telefone}) - {o.dia_fornada}
+                        <br />
+                        <small style={{ color: '#78716c' }}>{o.metodo_entrega === 'entrega' ? `Entrega: ${o.endereco}` : 'Retirada'}</small>
+                      </div>
+                      <div style={{ fontWeight: 'bold', color: '#b45309' }}>
+                        R$ {Number(o.total || 0).toFixed(2)}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </main>
+        )
       )}
     </div>
   );
