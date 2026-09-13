@@ -49,7 +49,7 @@ export default function App() {
     telefone: '',
     metodo: 'retirada',
     endereco: '',
-    diaFornada: 'Sexta-feira'
+    diaEntrega: 'Sexta-feira'
   });
 
   useEffect(() => {
@@ -119,7 +119,7 @@ export default function App() {
       cliente_telefone: formData.telefone,
       metodo_entrega: formData.metodo,
       endereco: formData.metodo === 'entrega' ? formData.endereco : 'Retirada no Local',
-      dia_fornada: formData.diaFornada,
+      dia_fornada: formData.diaEntrega,
       itens: cart,
       total: finalTotal,
       status: 'Pendente'
@@ -141,7 +141,7 @@ export default function App() {
     const msg = `*Novo Pedido - Padaria Xuxuzão*%0A%0A` +
       `*Cliente:* ${formData.nome}%0A` +
       `*Telefone:* ${formData.telefone}%0A` +
-      `*Dia da Fornada:* ${formData.diaFornada}%0A` +
+      `*Dia da Entrega:* ${formData.diaEntrega}%0A` +
       `*Entrega:* ${formData.metodo === 'entrega' ? `Entrega em ${formData.endereco}` : 'Retirada no Local'}%0A%0A` +
       `*Itens:*%0A${itensTexto}%0A%0A` +
       `*Total:* R$ ${finalTotal.toFixed(2)}`;
@@ -149,7 +149,7 @@ export default function App() {
     window.open(`https://wa.me/?text=${msg}`, '_blank');
 
     setCart([]);
-    setFormData({ nome: '', telefone: '', metodo: 'retirada', endereco: '', diaFornada: 'Sexta-feira' });
+    setFormData({ nome: '', telefone: '', metodo: 'retirada', endereco: '', diaEntrega: 'Sexta-feira' });
     alert('Pedido registrado com sucesso!');
   };
 
@@ -164,7 +164,6 @@ export default function App() {
 
     if (supabase) {
       try {
-        // Enviando apenas a coluna 'quantidade' existente na tabela
         const { error } = await supabase.from('vendas_balcao').insert([
           { quantidade: qty }
         ]);
@@ -282,7 +281,7 @@ export default function App() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             <div>
               <h2 style={{ fontSize: '1.5rem', color: '#78350f', margin: 0 }}>Cardápio de Pães</h2>
-              <p style={{ fontSize: '0.875rem', color: '#57534e', margin: '0.25rem 0 0 0' }}>Garanta seus pães quentinhos para a próxima fornada!</p>
+              <p style={{ fontSize: '0.875rem', color: '#57534e', margin: '0.25rem 0 0 0' }}>Garanta seus pães quentinhos para a próxima entrega!</p>
             </div>
 
             {PRODUCTS.map((product) => (
@@ -397,16 +396,13 @@ export default function App() {
                 </div>
 
                 <div>
-                  <label style={{ fontSize: '0.75rem', fontWeight: 'bold', display: 'block', marginBottom: '0.25rem' }}>Dia da Fornada</label>
-                  <select
-                    value={formData.diaFornada}
-                    onChange={e => setFormData({ ...formData, diaFornada: e.target.value })}
-                    style={{ width: '100%', padding: '0.5rem', borderRadius: '0.5rem', border: '1px solid #d6d3d1', backgroundColor: '#fff', boxSizing: 'border-box' }}
-                  >
-                    <option value="Quarta-feira">Quarta-feira</option>
-                    <option value="Sexta-feira">Sexta-feira</option>
-                    <option value="Sábado">Sábado</option>
-                  </select>
+                  <label style={{ fontSize: '0.75rem', fontWeight: 'bold', display: 'block', marginBottom: '0.25rem' }}>Dia da Entrega</label>
+                  <input
+                    type="text"
+                    disabled
+                    value="Sexta-feira"
+                    style={{ width: '100%', padding: '0.5rem', borderRadius: '0.5rem', border: '1px solid #d6d3d1', backgroundColor: '#f5f5f4', color: '#57534e', fontWeight: 'bold', boxSizing: 'border-box', cursor: 'not-allowed' }}
+                  />
                 </div>
 
                 <div>
@@ -594,7 +590,7 @@ export default function App() {
                   {orders.map((o, idx) => (
                     <li key={o.id || idx} style={{ padding: '0.75rem', backgroundColor: '#fffbeb', borderRadius: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <div>
-                        <strong>{o.cliente_nome}</strong> ({o.cliente_telefone}) - {o.dia_fornada}
+                        <strong>{o.cliente_nome}</strong> ({o.cliente_telefone}) - Entrega: {o.dia_fornada || 'Sexta-feira'}
                         <br />
                         <small style={{ color: '#78716c' }}>{o.metodo_entrega === 'entrega' ? `Entrega: ${o.endereco}` : 'Retirada'}</small>
                       </div>
