@@ -536,12 +536,21 @@ export default function App() {
                 </p>
               </div>
 
-              {/* QR CODE COM FORMATO COMPLETO E 100% GARANTIDO (API QR SERVER COM MARGEM EXPANDIDA E FORMATO QUADRADO ÍNTEGRO) */}
-              <div style={{ marginBottom: '1.25rem', display: 'inline-block', padding: '1rem', backgroundColor: '#ffffff', border: '2px solid #fde68a', borderRadius: '0.75rem', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
+              {/* QR CODE COM MARGEM DE SEGURANÇA (QUIET ZONE) GARANTIDA */}
+              <div style={{ 
+                marginBottom: '1.25rem', 
+                display: 'inline-block', 
+                padding: '16px', 
+                backgroundColor: '#ffffff', 
+                border: '2px solid #fde68a', 
+                borderRadius: '0.75rem', 
+                boxShadow: '0 4px 6px rgba(0,0,0,0.05)',
+                lineHeight: 0
+              }}>
                 <img
-                  src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&margin=10&data=${encodeURIComponent(PIX_KEY_CLEAN)}`}
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=20&data=${encodeURIComponent(PIX_KEY_CLEAN)}`}
                   alt="QR Code Pix Completo"
-                  style={{ width: '220px', height: '220px', objectFit: 'contain', display: 'block', margin: '0 auto' }}
+                  style={{ width: '220px', height: '220px', display: 'block', margin: '0 auto' }}
                 />
               </div>
 
