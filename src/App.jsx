@@ -536,11 +536,13 @@ export default function App() {
                 </p>
               </div>
 
-              {/* QR CODE LOCAL ESTICADO PREENCHENDO O QUADRADO */}
+              {/* QR CODE PERFEITAMENTE AJUSTADO E PROPORCIONAL */}
               <div style={{ 
                 marginBottom: '1.25rem', 
-                display: 'inline-block', 
-                padding: '16px', 
+                display: 'inline-flex', 
+                justifyContent: 'center',
+                alignItems: 'center',
+                padding: '12px', 
                 backgroundColor: '#ffffff', 
                 border: '2px solid #fde68a', 
                 borderRadius: '0.75rem', 
@@ -549,7 +551,7 @@ export default function App() {
                 <img
                   src="./pix.png"
                   alt="QR Code Pix"
-                  style={{ width: '200px', height: '200px', display: 'block', margin: '0 auto', objectFit: 'fill' }}
+                  style={{ width: '190px', height: '190px', display: 'block', objectFit: 'cover' }}
                 />
               </div>
 
