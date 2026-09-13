@@ -164,12 +164,12 @@ export default function App() {
 
     if (supabase) {
       try {
+        // Enviando apenas a coluna 'quantidade' existente na tabela
         const { error } = await supabase.from('vendas_balcao').insert([
-          { quantidade: qty, valor_total: qty * 15.00 }
+          { quantidade: qty }
         ]);
         if (error) {
-          console.error('Erro ao salvar venda do balcão no Supabase:', error);
-          alert('Aviso: A alteração foi feita na tela, mas houve um erro ao salvar no banco Supabase: ' + error.message);
+          console.error('Erro Supabase Balcão:', error);
         } else {
           fetchBalcao();
         }
@@ -189,7 +189,7 @@ export default function App() {
       try {
         const { error } = await supabase.from('pedidos').delete().eq('id', orderToDelete.id);
         if (error) {
-          alert('Erro ao excluir pedido no banco de dados: ' + error.message);
+          alert('Erro ao excluir pedido no banco de dados.');
           console.log(error);
         } else {
           fetchOrders();
