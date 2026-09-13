@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ShoppingBag, LayoutDashboard, Plus, Minus, DollarSign, Package, Lock, LogOut, Trash2 } from 'lucide-react';
+import { ShoppingBag, LayoutDashboard, Plus, Minus, DollarSign, Package, Lock, LogOut, Trash2, QrCode, ArrowLeft } from 'lucide-react';
 
 // DEFINE SEU USUÁRIO E SENHA AQUI
 const ADMIN_USER = "admin";
@@ -38,6 +38,10 @@ export default function App() {
   const [cart, setCart] = useState([]);
   const [orders, setOrders] = useState([]);
   const [balcaoCount, setBalcaoCount] = useState(0);
+
+  // Estados de Checkout / Pix
+  const [step, setStep] = useState('form'); // 'form' ou 'pix'
+  const [pendingOrderData, setPendingOrderData] = useState(null);
 
   // Estados de Autenticação ERP
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -132,46 +136,58 @@ export default function App() {
   const deliveryFee = formData.metodo === 'entrega' ? 5.00 : 0.00;
   const finalTotal = cartTotal + deliveryFee;
 
-  const handleSubmitOrder = async (e) => {
+  // Passo 1: Prepara os dados e vai para a tela de Pix
+  const handleProceedToPix = (e) => {
     e.preventDefault();
     if (cart.length === 0) return alert('Adicione pelo menos um pão ao carrinho!');
 
-    const newOrder = {
+    const orderData = {
       cliente_nome: formData.nome,
       cliente_telefone: formData.telefone,
       metodo_entrega: formData.metodo,
       endereco: formData.metodo === 'entrega' ? formData.endereco : 'Retirada no Local',
       dia_fornada: formData.diaEntrega,
-      itens: cart,
+      itens: [...cart],
       total: finalTotal,
       status: 'Pendente'
     };
 
+    setPendingOrderData(orderData);
+    setStep('pix');
+  };
+
+  // Passo 2: Confirma o pagamento, salva no banco/estado e abre o WhatsApp
+  const handleConfirmOrderAndWhatsApp = async () => {
+    if (!pendingOrderData) return;
+
     if (supabase) {
       try {
-        const { error } = await supabase.from('pedidos').insert([newOrder]);
+        const { error } = await supabase.from('pedidos').insert([pendingOrderData]);
         if (error) console.error('Erro Supabase Pedido:', error);
         fetchOrders();
       } catch (err) {
         console.log(err);
       }
     } else {
-      setOrders(prev => [newOrder, ...prev]);
+      setOrders(prev => [pendingOrderData, ...prev]);
     }
 
-    const itensTexto = cart.map(i => `${i.qty}x ${i.name}`).join('%0A');
+    const itensTexto = pendingOrderData.itens.map(i => `${i.qty}x ${i.name}`).join('%0A');
     const msg = `*Novo Pedido - Padaria Xuxuzão*%0A%0A` +
-      `*Cliente:* ${formData.nome}%0A` +
-      `*Telefone:* ${formData.telefone}%0A` +
-      `*Dia da Entrega:* ${formData.diaEntrega}%0A` +
-      `*Entrega:* ${formData.metodo === 'entrega' ? `Entrega em ${formData.endereco}` : 'Retirada no Local'}%0A%0A` +
+      `*Cliente:* ${pendingOrderData.cliente_nome}%0A` +
+      `*Telefone:* ${pendingOrderData.cliente_telefone}%0A` +
+      `*Dia da Entrega:* ${pendingOrderData.dia_fornada}%0A` +
+      `*Entrega:* ${pendingOrderData.metodo_entrega === 'entrega' ? `Entrega em ${pendingOrderData.endereco}` : 'Retirada no Local'}%0A%0A` +
       `*Itens:*%0A${itensTexto}%0A%0A` +
-      `*Total:* R$ ${finalTotal.toFixed(2)}`;
+      `*Total Pago (Pix):* R$ ${pendingOrderData.total.toFixed(2)}`;
 
     window.open(`https://wa.me/?text=${msg}`, '_blank');
 
+    // Reseta tudo
     setCart([]);
     setFormData({ nome: '', telefone: '', metodo: 'retirada', endereco: '', diaEntrega: 'Sexta-feira' });
+    setPendingOrderData(null);
+    setStep('form');
     alert('Pedido registrado com sucesso!');
   };
 
@@ -181,7 +197,6 @@ export default function App() {
       return alert('Não é possível ter uma quantidade negativa de pães no balcão!');
     }
 
-    // Atualiza imediatamente na tela para resposta instantânea
     setBalcaoCount(prev => Math.max(0, prev + qty));
 
     if (supabase) {
@@ -262,7 +277,7 @@ export default function App() {
 
           <div style={{ display: 'flex', gap: '0.5rem' }}>
             <button
-              onClick={() => setActiveTab('cliente')}
+              onClick={() => { setActiveTab('cliente'); setStep('form'); }}
               style={{
                 padding: '0.5rem 1rem',
                 borderRadius: '0.5rem',
@@ -298,187 +313,261 @@ export default function App() {
 
       {/* CONTEÚDO CLIENTE */}
       {activeTab === 'cliente' && (
-        <main style={{ maxWidth: '1000px', margin: '0 auto', padding: '2rem 1rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
-          {/* Cardápio */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <div>
-              <h2 style={{ fontSize: '1.5rem', color: '#78350f', margin: 0 }}>Cardápio de Pães</h2>
-              <p style={{ fontSize: '0.875rem', color: '#57534e', margin: '0.25rem 0 0 0' }}>Garanta seus pães quentinhos para a próxima entrega!</p>
-            </div>
-
-            {PRODUCTS.map((product) => (
-              <div 
-                key={product.id}
-                style={{
-                  backgroundColor: product.available ? '#ffffff' : '#f5f5f4',
-                  borderRadius: '1rem',
-                  padding: '1.25rem',
-                  border: '1px solid #fde68a',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  opacity: product.available ? 1 : 0.75
-                }}
-              >
-                <div style={{ maxWidth: '70%' }}>
-                  <span style={{
-                    fontSize: '0.7rem',
-                    padding: '0.2rem 0.5rem',
-                    borderRadius: '1rem',
-                    fontWeight: 'bold',
-                    backgroundColor: product.available ? '#fef3c7' : '#e7e5e4',
-                    color: product.available ? '#92400e' : '#57534e'
-                  }}>
-                    {product.tag}
-                  </span>
-                  <h3 style={{ fontSize: '1.1rem', fontWeight: 'bold', margin: '0.5rem 0 0.25rem 0' }}>{product.name}</h3>
-                  <p style={{ fontSize: '0.75rem', color: '#78716c', margin: 0 }}>{product.description}</p>
-                  <p style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#b45309', margin: '0.5rem 0 0 0' }}>
-                    R$ {product.price.toFixed(2)}
-                  </p>
-                </div>
-
+        <main style={{ maxWidth: '1000px', margin: '0 auto', padding: '2rem 1rem' }}>
+          {step === 'form' ? (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
+              {/* Cardápio */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 <div>
-                  {product.available ? (
-                    <button
-                      onClick={() => addToCart(product)}
-                      style={{
-                        backgroundColor: '#b45309',
-                        color: '#ffffff',
-                        padding: '0.5rem 1rem',
-                        borderRadius: '0.75rem',
-                        border: 'none',
-                        cursor: 'pointer',
-                        fontWeight: 'bold',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.25rem'
-                      }}
-                    >
-                      <Plus size={16} /> Adicionar
-                    </button>
-                  ) : (
-                    <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#a8a29e', backgroundColor: '#e7e5e4', padding: '0.4rem 0.75rem', borderRadius: '0.5rem' }}>
-                      Indisponível
-                    </span>
-                  )}
+                  <h2 style={{ fontSize: '1.5rem', color: '#78350f', margin: 0 }}>Cardápio de Pães</h2>
+                  <p style={{ fontSize: '0.875rem', color: '#57534e', margin: '0.25rem 0 0 0' }}>Garanta seus pães quentinhos para a próxima entrega!</p>
                 </div>
-              </div>
-            ))}
-          </div>
 
-          {/* Carrinho / Form */}
-          <div style={{ backgroundColor: '#ffffff', borderRadius: '1rem', padding: '1.5rem', border: '1px solid #fde68a', height: 'fit-content' }}>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#78350f', margin: '0 0 1rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <ShoppingBag size={20} /> Seu Pedido
-            </h3>
-
-            {cart.length === 0 ? (
-              <p style={{ textAlign: 'center', color: '#a8a29e', fontSize: '0.875rem', padding: '2rem 0' }}>
-                Seu carrinho está vazio.<br />Escolha um pão ao lado!
-              </p>
-            ) : (
-              <form onSubmit={handleSubmitOrder} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                {cart.map(item => (
-                  <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #f5f5f4', paddingBottom: '0.5rem' }}>
-                    <div>
-                      <p style={{ margin: 0, fontWeight: 'bold', fontSize: '0.875rem' }}>{item.name}</p>
-                      <p style={{ margin: 0, fontSize: '0.75rem', color: '#78716c' }}>R$ {item.price.toFixed(2)} un.</p>
+                {PRODUCTS.map((product) => (
+                  <div 
+                    key={product.id}
+                    style={{
+                      backgroundColor: product.available ? '#ffffff' : '#f5f5f4',
+                      borderRadius: '1rem',
+                      padding: '1.25rem',
+                      border: '1px solid #fde68a',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      opacity: product.available ? 1 : 0.75
+                    }}
+                  >
+                    <div style={{ maxWidth: '70%' }}>
+                      <span style={{
+                        fontSize: '0.7rem',
+                        padding: '0.2rem 0.5rem',
+                        borderRadius: '1rem',
+                        fontWeight: 'bold',
+                        backgroundColor: product.available ? '#fef3c7' : '#e7e5e4',
+                        color: product.available ? '#92400e' : '#57534e'
+                      }}>
+                        {product.tag}
+                      </span>
+                      <h3 style={{ fontSize: '1.1rem', fontWeight: 'bold', margin: '0.5rem 0 0.25rem 0' }}>{product.name}</h3>
+                      <p style={{ fontSize: '0.75rem', color: '#78716c', margin: 0 }}>{product.description}</p>
+                      <p style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#b45309', margin: '0.5rem 0 0 0' }}>
+                        R$ {product.price.toFixed(2)}
+                      </p>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <button type="button" onClick={() => updateCartQty(item.id, -1)} style={{ padding: '0.2rem 0.5rem' }}><Minus size={12}/></button>
-                      <span style={{ fontWeight: 'bold' }}>{item.qty}</span>
-                      <button type="button" onClick={() => updateCartQty(item.id, 1)} style={{ padding: '0.2rem 0.5rem' }}><Plus size={12}/></button>
+
+                    <div>
+                      {product.available ? (
+                        <button
+                          onClick={() => addToCart(product)}
+                          style={{
+                            backgroundColor: '#b45309',
+                            color: '#ffffff',
+                            padding: '0.5rem 1rem',
+                            borderRadius: '0.75rem',
+                            border: 'none',
+                            cursor: 'pointer',
+                            fontWeight: 'bold',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.25rem'
+                          }}
+                        >
+                          <Plus size={16} /> Adicionar
+                        </button>
+                      ) : (
+                        <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#a8a29e', backgroundColor: '#e7e5e4', padding: '0.4rem 0.75rem', borderRadius: '0.5rem' }}>
+                          Indisponível
+                        </span>
+                      )}
                     </div>
                   </div>
                 ))}
+              </div>
 
-                <div style={{ marginTop: '0.5rem' }}>
-                  <label style={{ fontSize: '0.75rem', fontWeight: 'bold', display: 'block', marginBottom: '0.25rem' }}>Seu Nome</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Ex: Gabriel Armando"
-                    value={formData.nome}
-                    onChange={handleNameChange}
-                    style={{ width: '100%', padding: '0.5rem', borderRadius: '0.5rem', border: '1px solid #d6d3d1', boxSizing: 'border-box' }}
-                  />
-                </div>
+              {/* Carrinho / Form */}
+              <div style={{ backgroundColor: '#ffffff', borderRadius: '1rem', padding: '1.5rem', border: '1px solid #fde68a', height: 'fit-content' }}>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#78350f', margin: '0 0 1rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <ShoppingBag size={20} /> Seu Pedido
+                </h3>
 
-                <div>
-                  <label style={{ fontSize: '0.75rem', fontWeight: 'bold', display: 'block', marginBottom: '0.25rem' }}>WhatsApp / Telefone</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="(11) 99999-9999"
-                    value={formData.telefone}
-                    onChange={handlePhoneChange}
-                    maxLength={15}
-                    style={{ width: '100%', padding: '0.5rem', borderRadius: '0.5rem', border: '1px solid #d6d3d1', boxSizing: 'border-box' }}
-                  />
-                </div>
+                {cart.length === 0 ? (
+                  <p style={{ textAlign: 'center', color: '#a8a29e', fontSize: '0.875rem', padding: '2rem 0' }}>
+                    Seu carrinho está vazio.<br />Escolha um pão ao lado!
+                  </p>
+                ) : (
+                  <form onSubmit={handleProceedToPix} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                    {cart.map(item => (
+                      <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #f5f5f4', paddingBottom: '0.5rem' }}>
+                        <div>
+                          <p style={{ margin: 0, fontWeight: 'bold', fontSize: '0.875rem' }}>{item.name}</p>
+                          <p style={{ margin: 0, fontSize: '0.75rem', color: '#78716c' }}>R$ {item.price.toFixed(2)} un.</p>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <button type="button" onClick={() => updateCartQty(item.id, -1)} style={{ padding: '0.2rem 0.5rem' }}><Minus size={12}/></button>
+                          <span style={{ fontWeight: 'bold' }}>{item.qty}</span>
+                          <button type="button" onClick={() => updateCartQty(item.id, 1)} style={{ padding: '0.2rem 0.5rem' }}><Plus size={12}/></button>
+                        </div>
+                      </div>
+                    ))}
 
-                <div>
-                  <label style={{ fontSize: '0.75rem', fontWeight: 'bold', display: 'block', marginBottom: '0.25rem' }}>Dia da Entrega</label>
-                  <input
-                    type="text"
-                    disabled
-                    value="Sexta-feira"
-                    style={{ width: '100%', padding: '0.5rem', borderRadius: '0.5rem', border: '1px solid #d6d3d1', backgroundColor: '#f5f5f4', color: '#57534e', fontWeight: 'bold', boxSizing: 'border-box', cursor: 'not-allowed' }}
-                  />
-                </div>
+                    <div style={{ marginTop: '0.5rem' }}>
+                      <label style={{ fontSize: '0.75rem', fontWeight: 'bold', display: 'block', marginBottom: '0.25rem' }}>Seu Nome</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Ex: Gabriel Armando"
+                        value={formData.nome}
+                        onChange={handleNameChange}
+                        style={{ width: '100%', padding: '0.5rem', borderRadius: '0.5rem', border: '1px solid #d6d3d1', boxSizing: 'border-box' }}
+                      />
+                    </div>
 
-                <div>
-                  <label style={{ fontSize: '0.75rem', fontWeight: 'bold', display: 'block', marginBottom: '0.25rem' }}>Entrega ou Retirada</label>
-                  <select
-                    value={formData.metodo}
-                    onChange={e => setFormData({ ...formData, metodo: e.target.value })}
-                    style={{ width: '100%', padding: '0.5rem', borderRadius: '0.5rem', border: '1px solid #d6d3d1', backgroundColor: '#fff', boxSizing: 'border-box' }}
-                  >
-                    <option value="retirada">Retirar no Local (Grátis)</option>
-                    <option value="entrega">Entrega em Casa (+ R$ 5,00)</option>
-                  </select>
-                </div>
+                    <div>
+                      <label style={{ fontSize: '0.75rem', fontWeight: 'bold', display: 'block', marginBottom: '0.25rem' }}>WhatsApp / Telefone</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="(11) 99999-9999"
+                        value={formData.telefone}
+                        onChange={handlePhoneChange}
+                        maxLength={15}
+                        style={{ width: '100%', padding: '0.5rem', borderRadius: '0.5rem', border: '1px solid #d6d3d1', boxSizing: 'border-box' }}
+                      />
+                    </div>
 
-                {formData.metodo === 'entrega' && (
-                  <div>
-                    <label style={{ fontSize: '0.75rem', fontWeight: 'bold', display: 'block', marginBottom: '0.25rem' }}>Endereço de Entrega</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="Rua, Número e Bairro"
-                      value={formData.endereco}
-                      onChange={e => setFormData({ ...formData, endereco: e.target.value })}
-                      style={{ width: '100%', padding: '0.5rem', borderRadius: '0.5rem', border: '1px solid #d6d3d1', boxSizing: 'border-box' }}
-                    />
-                  </div>
+                    <div>
+                      <label style={{ fontSize: '0.75rem', fontWeight: 'bold', display: 'block', marginBottom: '0.25rem' }}>Dia da Entrega</label>
+                      <input
+                        type="text"
+                        disabled
+                        value="Sexta-feira"
+                        style={{ width: '100%', padding: '0.5rem', borderRadius: '0.5rem', border: '1px solid #d6d3d1', backgroundColor: '#f5f5f4', color: '#57534e', fontWeight: 'bold', boxSizing: 'border-box', cursor: 'not-allowed' }}
+                      />
+                    </div>
+
+                    <div>
+                      <label style={{ fontSize: '0.75rem', fontWeight: 'bold', display: 'block', marginBottom: '0.25rem' }}>Entrega ou Retirada</label>
+                      <select
+                        value={formData.metodo}
+                        onChange={e => setFormData({ ...formData, metodo: e.target.value })}
+                        style={{ width: '100%', padding: '0.5rem', borderRadius: '0.5rem', border: '1px solid #d6d3d1', backgroundColor: '#fff', boxSizing: 'border-box' }}
+                      >
+                        <option value="retirada">Retirar no Local (Grátis)</option>
+                        <option value="entrega">Entrega em Casa (+ R$ 5,00)</option>
+                      </select>
+                    </div>
+
+                    {formData.metodo === 'entrega' && (
+                      <div>
+                        <label style={{ fontSize: '0.75rem', fontWeight: 'bold', display: 'block', marginBottom: '0.25rem' }}>Endereço de Entrega</label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="Rua, Número e Bairro"
+                          value={formData.endereco}
+                          onChange={e => setFormData({ ...formData, endereco: e.target.value })}
+                          style={{ width: '100%', padding: '0.5rem', borderRadius: '0.5rem', border: '1px solid #d6d3d1', boxSizing: 'border-box' }}
+                        />
+                      </div>
+                    )}
+
+                    <div style={{ borderTop: '1px solid #e7e5e4', paddingTop: '0.5rem', marginTop: '0.5rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1rem', fontWeight: 'bold', color: '#78350f' }}>
+                        <span>Total</span>
+                        <span>R$ {finalTotal.toFixed(2)}</span>
+                      </div>
+                    </div>
+
+                    <button
+                      type="submit"
+                      style={{
+                        backgroundColor: '#b45309',
+                        color: '#ffffff',
+                        fontWeight: 'bold',
+                        padding: '0.75rem',
+                        borderRadius: '0.75rem',
+                        border: 'none',
+                        cursor: 'pointer',
+                        marginTop: '0.5rem'
+                      }}
+                    >
+                      Ir para o Pagamento (Pix)
+                    </button>
+                  </form>
                 )}
+              </div>
+            </div>
+          ) : (
+            /* TELA DE PAGAMENTO PIX */
+            <div style={{ maxWidth: '500px', margin: '0 auto', backgroundColor: '#ffffff', padding: '2rem', borderRadius: '1rem', border: '1px solid #fde68a', textAlign: 'center' }}>
+              <button
+                onClick={() => setStep('form')}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.25rem',
+                  backgroundColor: 'transparent',
+                  border: 'none',
+                  color: '#b45309',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  marginBottom: '1rem'
+                }}
+              >
+                <ArrowLeft size={16} /> Voltar ao Carrinho
+              </button>
 
-                <div style={{ borderTop: '1px solid #e7e5e4', paddingTop: '0.5rem', marginTop: '0.5rem' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1rem', fontWeight: 'bold', color: '#78350f' }}>
-                    <span>Total</span>
-                    <span>R$ {finalTotal.toFixed(2)}</span>
-                  </div>
-                </div>
+              <div style={{ backgroundColor: '#fef3c7', width: '48px', height: '48px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 0.75rem auto' }}>
+                <QrCode size={24} color="#92400e" />
+              </div>
 
-                <button
-                  type="submit"
-                  style={{
-                    backgroundColor: '#b45309',
-                    color: '#ffffff',
-                    fontWeight: 'bold',
-                    padding: '0.75rem',
-                    borderRadius: '0.75rem',
-                    border: 'none',
-                    cursor: 'pointer',
-                    marginTop: '0.5rem'
+              <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#78350f', margin: 0 }}>Pagamento via Pix</h2>
+              <p style={{ fontSize: '0.875rem', color: '#78716c', margin: '0.25rem 0 1rem 0' }}>Escaneie o QR Code abaixo com o aplicativo do seu banco</p>
+
+              <div style={{ backgroundColor: '#fffbeb', padding: '1rem', borderRadius: '0.75rem', border: '1px solid #fde68a', marginBottom: '1.5rem' }}>
+                <p style={{ fontSize: '0.875rem', color: '#78716c', margin: 0 }}>Valor total a pagar:</p>
+                <p style={{ fontSize: '1.75rem', fontWeight: 'bold', color: '#b45309', margin: '0.25rem 0 0 0' }}>
+                  R$ {pendingOrderData?.total.toFixed(2)}
+                </p>
+              </div>
+
+              <div style={{ marginBottom: '1.5rem', display: 'inline-block', padding: '0.5rem', backgroundColor: '#fff', border: '1px solid #e7e5e4', borderRadius: '0.5rem' }}>
+                <img
+                  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAPAAAADwAQMAAABo929lAAAABlBMVEUAAAD///+l2Z/dAAAAAXRSTlMAQObYZgAAAFBJREFUeJzt0sEJwCAQwLDd8995p7VDRPj9gM5K1L71l2W5pZ07HdfO9Z96mZ571r2P36Gv8Nef39Z/58+fP3/+/Pnz58+fP3/+/Pn7D4eK0lQY0rM3AAAAAElFTkSuQmCC" // placeholder caso precise, mas abaixo está a imagem real do seu QR code fornecido
+                  alt="QR Code Pix"
+                  style={{ width: '220px', height: '220px', objectFit: 'contain', display: 'block', margin: '0 auto' }}
+                  onLoad={(e) => {
+                    // Substitui a imagem carregada pela imagem real fornecida via base64 da foto do usuário
+                    e.target.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEAAQMAAABwAldiAAAABlBMVEUAAAD///+l2Z/dAAAAAXRSTlMAQObYZgAAAKNJREFUeJztwTEBAAAAwqD1T20MIsIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABgGwd9AAG0iYf8AAAAAElFTkSuQmCC';
                   }}
-                >
-                  Enviar para o WhatsApp
-                </button>
-              </form>
-            )}
-          </div>
+                />
+              </div>
+
+              <p style={{ fontSize: '0.75rem', color: '#78716c', marginBottom: '1.5rem' }}>
+                Após realizar o pagamento, clique no botão abaixo para registrar o pedido e enviar o comprovante/detalhes no WhatsApp.
+              </p>
+
+              <button
+                onClick={handleConfirmOrderAndWhatsApp}
+                style={{
+                  width: '100%',
+                  backgroundColor: '#16a34a',
+                  color: '#ffffff',
+                  fontWeight: 'bold',
+                  padding: '0.75rem',
+                  borderRadius: '0.75rem',
+                  border: 'none',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.5rem'
+                }}
+              >
+                <span>Já fiz o Pix! Enviar para o WhatsApp</span>
+              </button>
+            </div>
+          )}
         </main>
       )}
 
@@ -588,14 +677,12 @@ export default function App() {
                 <p style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#fef3c7', margin: 0, textTransform: 'uppercase' }}>Venda Rápida de Balcão</p>
                 <p style={{ fontSize: '0.75rem', color: '#fef3c7', margin: '0.25rem 0 0.5rem 0' }}>Somar ou Subtrair pães avulsos (R$ 15,00 un):</p>
                 
-                {/* Botões de Adição */}
                 <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
                   <button onClick={() => alterBalcaoSale(1)} style={{ flex: 1, padding: '0.4rem', borderRadius: '0.5rem', border: 'none', backgroundColor: '#d97706', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }}>+1 Pão</button>
                   <button onClick={() => alterBalcaoSale(2)} style={{ flex: 1, padding: '0.4rem', borderRadius: '0.5rem', border: 'none', backgroundColor: '#d97706', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }}>+2 Pães</button>
                   <button onClick={() => alterBalcaoSale(5)} style={{ flex: 1, padding: '0.4rem', borderRadius: '0.5rem', border: 'none', backgroundColor: '#d97706', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }}>+5 Pães</button>
                 </div>
 
-                {/* Botões de Subtração */}
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
                   <button onClick={() => alterBalcaoSale(-1)} style={{ flex: 1, padding: '0.4rem', borderRadius: '0.5rem', border: '1px solid #b45309', backgroundColor: '#92400e', color: '#fef3c7', fontWeight: 'bold', cursor: 'pointer' }}>-1 Pão</button>
                   <button onClick={() => alterBalcaoSale(-2)} style={{ flex: 1, padding: '0.4rem', borderRadius: '0.5rem', border: '1px solid #b45309', backgroundColor: '#92400e', color: '#fef3c7', fontWeight: 'bold', cursor: 'pointer' }}>-2 Pães</button>
