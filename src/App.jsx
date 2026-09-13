@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ShoppingBag, LayoutDashboard, Plus, Minus, DollarSign, Package, Lock, LogOut, Trash2, QrCode, ArrowLeft, Copy, Check } from 'lucide-react';
+import { ShoppingBag, LayoutDashboard, Plus, Minus, Lock, LogOut, Trash2, QrCode, ArrowLeft, Copy, Check } from 'lucide-react';
 
 // DEFINE SEU USUÁRIO E SENHA AQUI
 const ADMIN_USER = "admin";
@@ -536,12 +536,12 @@ export default function App() {
                 </p>
               </div>
 
-              {/* QR CODE MAIOR, NÍDITO E COM BORDA DE SEGURANÇA PARA O BANCO LER */}
+              {/* QR CODE COM FORMATO COMPLETO E 100% GARANTIDO (API QR SERVER COM MARGEM EXPANDIDA E FORMATO QUADRADO ÍNTEGRO) */}
               <div style={{ marginBottom: '1.25rem', display: 'inline-block', padding: '1rem', backgroundColor: '#ffffff', border: '2px solid #fde68a', borderRadius: '0.75rem', boxShadow: '0 4px 6px rgba(0,0,0,0.05)' }}>
                 <img
-                  src={`https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(PIX_KEY_CLEAN)}`}
-                  alt="QR Code Pix"
-                  style={{ width: '240px', height: '240px', objectFit: 'contain', display: 'block', margin: '0 auto' }}
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&margin=10&data=${encodeURIComponent(PIX_KEY_CLEAN)}`}
+                  alt="QR Code Pix Completo"
+                  style={{ width: '220px', height: '220px', objectFit: 'contain', display: 'block', margin: '0 auto' }}
                 />
               </div>
 
