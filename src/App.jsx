@@ -536,7 +536,7 @@ export default function App() {
                 </p>
               </div>
 
-              {/* QR CODE COM API DO GOOGLE (GARANTIA TOTAL DOS 4 CANTOS) */}
+              {/* QR CODE SEGURO EM PNG CORRIGIDO */}
               <div style={{ 
                 marginBottom: '1.25rem', 
                 display: 'inline-block', 
@@ -544,13 +544,12 @@ export default function App() {
                 backgroundColor: '#ffffff', 
                 border: '2px solid #fde68a', 
                 borderRadius: '0.75rem', 
-                boxShadow: '0 4px 6px rgba(0,0,0,0.05)',
-                lineHeight: 0
+                boxShadow: '0 4px 6px rgba(0,0,0,0.05)'
               }}>
                 <img
-                  src={`https://chart.googleapis.com/chart?chs=300x300&cht=qr&chl=${encodeURIComponent(PIX_KEY_CLEAN)}&choe=UTF-8`}
-                  alt="QR Code Pix Completo"
-                  style={{ width: '220px', height: '220px', display: 'block', margin: '0 auto' }}
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(PIX_KEY_CLEAN)}`}
+                  alt="QR Code Pix"
+                  style={{ width: '200px', height: '200px', display: 'block', margin: '0 auto' }}
                 />
               </div>
 
