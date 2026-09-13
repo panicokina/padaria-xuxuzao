@@ -536,7 +536,7 @@ export default function App() {
                 </p>
               </div>
 
-              {/* QR CODE COM MARGEM DE SEGURANÇA (QUIET ZONE) GARANTIDA */}
+              {/* QR CODE COM API DO GOOGLE (GARANTIA TOTAL DOS 4 CANTOS) */}
               <div style={{ 
                 marginBottom: '1.25rem', 
                 display: 'inline-block', 
@@ -548,7 +548,7 @@ export default function App() {
                 lineHeight: 0
               }}>
                 <img
-                  src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=20&data=${encodeURIComponent(PIX_KEY_CLEAN)}`}
+                  src={`https://chart.googleapis.com/chart?chs=300x300&cht=qr&chl=${encodeURIComponent(PIX_KEY_CLEAN)}&choe=UTF-8`}
                   alt="QR Code Pix Completo"
                   style={{ width: '220px', height: '220px', display: 'block', margin: '0 auto' }}
                 />
