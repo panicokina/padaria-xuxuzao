@@ -85,6 +85,28 @@ export default function App() {
     }
   }
 
+  // Função para formatar o telefone automaticamente (XX) XXXXX-XXXX
+  const handlePhoneChange = (e) => {
+    let value = e.target.value.replace(/\D/g, ''); // Remove tudo que não for número
+    if (value.length > 11) value = value.slice(0, 11); // Limita a 11 dígitos
+
+    if (value.length > 6) {
+      value = `(${value.slice(0, 2)}) ${value.slice(2, 7)}-${value.slice(7)}`;
+    } else if (value.length > 2) {
+      value = `(${value.slice(0, 2)}) ${value.slice(2)}`;
+    } else if (value.length > 0) {
+      value = `(${value}`;
+    }
+
+    setFormData({ ...formData, telefone: value });
+  };
+
+  // Função para aceitar apenas letras no nome
+  const handleNameChange = (e) => {
+    const value = e.target.value.replace(/[^A-Za-zÀ-ÿ\s]/g, ''); // Permite apenas letras e espaços
+    setFormData({ ...formData, nome: value });
+  };
+
   const addToCart = (product) => {
     if (!product.available) return;
     setCart(prev => {
@@ -376,9 +398,9 @@ export default function App() {
                   <input
                     type="text"
                     required
-                    placeholder="Ex: Gabriel"
+                    placeholder="Ex: Gabriel Armando"
                     value={formData.nome}
-                    onChange={e => setFormData({ ...formData, nome: e.target.value })}
+                    onChange={handleNameChange}
                     style={{ width: '100%', padding: '0.5rem', borderRadius: '0.5rem', border: '1px solid #d6d3d1', boxSizing: 'border-box' }}
                   />
                 </div>
@@ -390,7 +412,8 @@ export default function App() {
                     required
                     placeholder="(11) 99999-9999"
                     value={formData.telefone}
-                    onChange={e => setFormData({ ...formData, telefone: e.target.value })}
+                    onChange={handlePhoneChange}
+                    maxLength={15}
                     style={{ width: '100%', padding: '0.5rem', borderRadius: '0.5rem', border: '1px solid #d6d3d1', boxSizing: 'border-box' }}
                   />
                 </div>
