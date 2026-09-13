@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { ShoppingBag, LayoutDashboard, Plus, Minus, DollarSign, Package, Lock, LogOut } from 'lucide-react';
+import { ShoppingBag, LayoutDashboard, Plus, Minus, DollarSign, Package, Lock, LogOut, Trash2 } from 'lucide-react';
 
 // DEFINE SEU USUÁRIO E SENHA AQUI
-const ADMIN_USER = "panicao";
-const ADMIN_PASS = "panicao";
+const ADMIN_USER = "admin";
+const ADMIN_PASS = "123456";
 
 // Tente importar o supabase com segurança
 let supabase = null;
@@ -152,7 +152,12 @@ export default function App() {
     alert('Pedido registrado com sucesso!');
   };
 
-  const addBalcaoSale = async (qty) => {
+  // Alterar vendas do balcão (Soma ou Subtração)
+  const alterBalcaoSale = async (qty) => {
+    if (qty < 0 && balcaoCount + qty < 0) {
+      return alert('Não é possível ter uma quantidade negativa de pães no balcão!');
+    }
+
     if (supabase) {
       try {
         await supabase.from('vendas_balcao').insert([{ quantidade: qty, valor_total: qty * 15.00 }]);
@@ -160,8 +165,32 @@ export default function App() {
       } catch (err) {
         console.log(err);
       }
+    } else {
+      setBalcaoCount(prev => Math.max(0, prev + qty));
     }
-    setBalcaoCount(prev => prev + qty);
+  };
+
+  // Excluir encomenda
+  const handleDeleteOrder = async (orderToDelete) => {
+    if (!window.confirm(`Tem certeza que deseja cancelar/remover a encomenda de ${orderToDelete.cliente_nome}?`)) {
+      return;
+    }
+
+    if (supabase && orderToDelete.id) {
+      try {
+        const { error } = await supabase.from('pedidos').delete().eq('id', orderToDelete.id);
+        if (error) {
+          alert('Erro ao excluir pedido no banco de dados.');
+          console.log(error);
+        } else {
+          fetchOrders();
+        }
+      } catch (err) {
+        console.log(err);
+      }
+    } else {
+      setOrders(prev => prev.filter(o => o !== orderToDelete));
+    }
   };
 
   const handleLoginSubmit = (e) => {
@@ -526,13 +555,23 @@ export default function App() {
                 <p style={{ fontSize: '0.75rem', color: '#78716c', margin: 0 }}>{orders.length} encomendas + {balcaoCount} balcão</p>
               </div>
 
+              {/* Controle de Vendas do Balcão */}
               <div style={{ backgroundColor: '#78350f', color: '#ffffff', padding: '1.25rem', borderRadius: '1rem' }}>
                 <p style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#fef3c7', margin: 0, textTransform: 'uppercase' }}>Venda Rápida de Balcão</p>
-                <p style={{ fontSize: '0.75rem', color: '#fef3c7', margin: '0.25rem 0 0.75rem 0' }}>Clique para somar pães avulsos (R$ 15,00 un):</p>
+                <p style={{ fontSize: '0.75rem', color: '#fef3c7', margin: '0.25rem 0 0.5rem 0' }}>Somar ou Subtrair pães avulsos (R$ 15,00 un):</p>
+                
+                {/* Botões de Adição */}
+                <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                  <button onClick={() => alterBalcaoSale(1)} style={{ flex: 1, padding: '0.4rem', borderRadius: '0.5rem', border: 'none', backgroundColor: '#d97706', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }}>+1 Pão</button>
+                  <button onClick={() => alterBalcaoSale(2)} style={{ flex: 1, padding: '0.4rem', borderRadius: '0.5rem', border: 'none', backgroundColor: '#d97706', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }}>+2 Pães</button>
+                  <button onClick={() => alterBalcaoSale(5)} style={{ flex: 1, padding: '0.4rem', borderRadius: '0.5rem', border: 'none', backgroundColor: '#d97706', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }}>+5 Pães</button>
+                </div>
+
+                {/* Botões de Subtração */}
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  <button onClick={() => addBalcaoSale(1)} style={{ flex: 1, padding: '0.5rem', borderRadius: '0.5rem', border: 'none', backgroundColor: '#d97706', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }}>+1 Pão</button>
-                  <button onClick={() => addBalcaoSale(2)} style={{ flex: 1, padding: '0.5rem', borderRadius: '0.5rem', border: 'none', backgroundColor: '#d97706', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }}>+2 Pães</button>
-                  <button onClick={() => addBalcaoSale(5)} style={{ flex: 1, padding: '0.5rem', borderRadius: '0.5rem', border: 'none', backgroundColor: '#d97706', color: '#fff', fontWeight: 'bold', cursor: 'pointer' }}>+5 Pães</button>
+                  <button onClick={() => alterBalcaoSale(-1)} style={{ flex: 1, padding: '0.4rem', borderRadius: '0.5rem', border: '1px solid #b45309', backgroundColor: '#92400e', color: '#fef3c7', fontWeight: 'bold', cursor: 'pointer' }}>-1 Pão</button>
+                  <button onClick={() => alterBalcaoSale(-2)} style={{ flex: 1, padding: '0.4rem', borderRadius: '0.5rem', border: '1px solid #b45309', backgroundColor: '#92400e', color: '#fef3c7', fontWeight: 'bold', cursor: 'pointer' }}>-2 Pães</button>
+                  <button onClick={() => alterBalcaoSale(-5)} style={{ flex: 1, padding: '0.4rem', borderRadius: '0.5rem', border: '1px solid #b45309', backgroundColor: '#92400e', color: '#fef3c7', fontWeight: 'bold', cursor: 'pointer' }}>-5 Pães</button>
                 </div>
               </div>
             </div>
@@ -544,14 +583,34 @@ export default function App() {
               ) : (
                 <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                   {orders.map((o, idx) => (
-                    <li key={idx} style={{ padding: '0.75rem', backgroundColor: '#fffbeb', borderRadius: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <li key={o.id || idx} style={{ padding: '0.75rem', backgroundColor: '#fffbeb', borderRadius: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <div>
                         <strong>{o.cliente_nome}</strong> ({o.cliente_telefone}) - {o.dia_fornada}
                         <br />
                         <small style={{ color: '#78716c' }}>{o.metodo_entrega === 'entrega' ? `Entrega: ${o.endereco}` : 'Retirada'}</small>
                       </div>
-                      <div style={{ fontWeight: 'bold', color: '#b45309' }}>
-                        R$ {Number(o.total || 0).toFixed(2)}
+                      
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                        <div style={{ fontWeight: 'bold', color: '#b45309' }}>
+                          R$ {Number(o.total || 0).toFixed(2)}
+                        </div>
+                        <button
+                          onClick={() => handleDeleteOrder(o)}
+                          title="Cancelar/Excluir Encomenda"
+                          style={{
+                            backgroundColor: '#fee2e2',
+                            color: '#dc2626',
+                            border: 'none',
+                            borderRadius: '0.375rem',
+                            padding: '0.35rem',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}
+                        >
+                          <Trash2 size={16} />
+                        </button>
                       </div>
                     </li>
                   ))}
